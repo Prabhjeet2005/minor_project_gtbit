@@ -15,6 +15,27 @@ const setupSocket = (io) => {
 		let packetQueue = []; // 1. Queue to store audio while connecting
 		let currentTranscript = "";
 
+		// NEW: Handle Deepgram audio for the very first greeting message
+		socket.on("request-initial-audio", async (text) => {
+			try {
+				console.log("🎵 Requesting Deepgram Audio for Greeting...");
+				let audioBuffer = null;
+				try {
+					audioBuffer = await aiService.generateAudio(text);
+				} catch (audioErr) {
+					console.error(
+						"Initial audio generation failed:",
+						audioErr.message,
+					);
+				}
+
+				// Emit it back using the same ai-response event so the frontend plays it
+				socket.emit("ai-response", { text: text, audio: audioBuffer });
+			} catch (err) {
+				console.error("Initial Audio Error:", err);
+			}
+		});
+
 		socket.on("audio-stream", (data) => {
 			// 3. SMART SENDING LOGIC
 			if (deepgramLive && deepgramLive.getReadyState() === 1) {
@@ -96,16 +117,36 @@ const setupSocket = (io) => {
 
 			try {
 				console.log("🤖 Asking AI...");
-				const aiResponse = await aiService.sendMessage(
+				const rawAiResponse = await aiService.sendMessage(
 					userId,
 					currentTranscript,
 				);
 
-				// Send AI response back
-				socket.emit("ai-response", aiResponse);
+				// NEW: Scrub Markdown and leftover placeholders before TTS
+				const cleanAiResponse = rawAiResponse
+					.replace(/\*/g, "") // Removes * and **
+					.replace(/#/g, "") // Removes headers
+					.replace(/\[Interviewer Name\]/gi, "Alex") // Replace lazy placeholders
+					.replace(/\[Company\]/gi, "our tech team")
+					.trim();
+
+				// 1. GENERATE THE AUDIO VIA DEEPGRAM
+				console.log("🎵 Requesting Deepgram Audio...");
+				let audioBuffer = null;
+				try {
+					// Pass the CLEANED text to Deepgram
+					audioBuffer = await aiService.generateAudio(cleanAiResponse);
+				} catch (audioErr) {
+					console.error("Audio generation failed:", audioErr.message);
+				}
+
+				// 2. SEND BOTH TEXT AND AUDIO TO THE FRONTEND
+				socket.emit("ai-response", {
+					text: cleanAiResponse, // Send the clean text to the UI bubble
+					audio: audioBuffer,
+				});
 				socket.emit("user-input-confirmed", currentTranscript);
 
-				// Clear buffer for next question
 				currentTranscript = "";
 			} catch (err) {
 				console.error("AI Error:", err.message);

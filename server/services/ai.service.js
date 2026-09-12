@@ -46,7 +46,7 @@ class AIService {
 			const response = await this.deepgram.speak.request(
 				{ text },
 				{
-					model: "aura-asteria-en",
+					model: "aura-stella-en",
 					encoding: "linear16", // Changed to MP3 for consistency
 					container: "wav",
 				},

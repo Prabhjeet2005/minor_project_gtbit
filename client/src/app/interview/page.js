@@ -42,7 +42,7 @@ export default function InterviewPage() {
 	const mediaRecorderRef = useRef(null);
 	const messagesEndRef = useRef(null);
 
-	const USE_DEEPGRAM = true;
+	const USE_DEEPGRAM = process.env.NEXT_PUBLIC_USE_DEEPGRAM !== "false";
 
 	useEffect(() => {
 		const loadVoices = () => {
@@ -61,14 +61,17 @@ export default function InterviewPage() {
 			setStatus("Connected");
 			const initialMsg = localStorage.getItem("initialAiMessage");
 			if (initialMsg) {
-				setTimeout(() => handleAiSpeech(initialMsg), 500);
+				newSocket.emit("request-initial-audio", initialMsg);
 				localStorage.removeItem("initialAiMessage");
 			}
 		});
 
-		newSocket.on("ai-response", (text) => {
+		newSocket.on("ai-response", (data) => {
 			setIsThinking(false);
-			handleAiSpeech(text);
+			// Handle payload as an object containing both text and audio
+			const text = typeof data === "string" ? data : data.text;
+			const audio = typeof data === "string" ? null : data.audio;
+			handleAiSpeech(text, audio);
 		});
 
 		newSocket.on("transcript-update", (data) =>
@@ -118,7 +121,13 @@ export default function InterviewPage() {
 		};
 	}, []);
 
-	const handleAiSpeech = (text) => {
+	const handleAiSpeech = async (text, audioBuffer) => {
+		console.log(
+			"🎙️ Deepgram Audio Received?",
+			audioBuffer
+				? "YES - Playing Deepgram!"
+				: "NO - Falling back to robot!",
+		);
 		setAiSpeaking(true);
 		setQuestionBubble(text);
 		addMessage("ai", text);
@@ -126,12 +135,37 @@ export default function InterviewPage() {
 
 		window.speechSynthesis.cancel();
 
-		const utterance = new SpeechSynthesisUtterance(text);
+		// 1. Check Toggle and Audio Buffer existence
+		if (USE_DEEPGRAM && audioBuffer) {
+			try {
+				const blob = new Blob([audioBuffer], { type: "audio/mp3" });
+				const audioUrl = URL.createObjectURL(blob);
+				const audioPlayer = new Audio(audioUrl);
 
+				audioPlayer.playbackRate = 1.2;
+				audioPlayer.onended = () => {
+					setAiSpeaking(false);
+					setStatus("Ready");
+				};
+
+
+				await audioPlayer.play();
+				return; // Exit function if Deepgram plays successfully
+			} catch (err) {
+				console.error(
+					"Deepgram playback failed, falling back to browser TTS:",
+					err,
+				);
+			}
+		}
+
+		// 2. Fallback: Browser Robotic Voice
+		const utterance = new SpeechSynthesisUtterance(text);
 		const googleVoice =
 			voices.find(
 				(v) => v.name.includes("Google") && v.lang.includes("en"),
 			) || voices.find((v) => v.lang.includes("en"));
+
 		if (googleVoice) {
 			utterance.voice = googleVoice;
 		}
@@ -140,12 +174,10 @@ export default function InterviewPage() {
 		window.currentUtterance = utterance;
 
 		utterance.onstart = () => window.speechSynthesis.resume();
-
 		utterance.onend = () => {
 			setAiSpeaking(false);
 			setStatus("Ready");
 		};
-
 		utterance.onerror = (e) => {
 			console.error("Browser TTS Error:", e);
 			setAiSpeaking(false);
