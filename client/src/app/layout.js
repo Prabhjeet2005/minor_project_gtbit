@@ -16,10 +16,9 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
 	// The Title is the most important SEO factor. Put your main keywords here.
-	title: "PrepMaster AI | Elite Interview Preparation & Proctoring",
+	title: "AI Interviewer",
 
-	description:
-		"Prepare for your dream job with PrepMaster AI. Offering cutting-edge AI mock interviews, secure proctoring, and real-time coding assessments to help you ace your next technical interview.",
+	description: "Prepare for your dream job with AI Interviewer",
 
 	// These keywords tell search algorithms exactly how to index you
 	keywords: [
@@ -38,17 +37,16 @@ export const metadata = {
 
 	// Open Graph makes your link look beautiful when shared on LinkedIn or WhatsApp
 	openGraph: {
-		title: "PrepMaster AI | Elite Interview Preparation",
-		description:
-			"Prepare for your dream job with cutting-edge AI mock interviews and secure proctoring.",
-		url: "https://prep-master-ai-client.vercel.app", // ⚠️ Change this to your actual Vercel/live URL!
-		siteName: "PrepMaster AI",
+		title: "AI Interview Preparation",
+		description: "Ai Interview",
+		url: "https://minor-project-gtbit.vercel.app/", // ⚠️ Change this to your actual Vercel/live URL!
+		siteName: "AI Interview",
 		images: [
 			{
-				url: "https://prep-master-ai-client.vercel.app/og-image.png", // ⚠️ Drop a cool screenshot of your app into your client/public folder and name it og-image.png
+				url: "https://minor-project-gtbit.vercel.app/og-image.svg", // ⚠️ Drop a cool screenshot of your app into your client/public folder and name it og-image.png
 				width: 1200,
 				height: 630,
-				alt: "PrepMaster AI Dashboard",
+				alt: "AI Interview",
 			},
 		],
 		locale: "en_US",
@@ -58,12 +56,9 @@ export const metadata = {
 	// Twitter Cards for social sharing
 	twitter: {
 		card: "summary_large_image",
-		title: "PrepMaster AI | Elite Interview Preparation",
-		description:
-			"Prepare for your dream job with cutting-edge AI mock interviews and secure proctoring.",
-		images: [
-			"https://prep-master-ai-client.vercel.app/og-image.png",
-		], // ⚠️ Change this too
+		title: "AI Interview",
+		description: "AI Interview",
+		images: ["https://minor-project-gtbit.vercel.app/"], // ⚠️ Change this too
 	},
 
 	// This explicitly invites Google's web crawlers to scan your site
