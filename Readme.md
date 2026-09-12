@@ -20,7 +20,7 @@ Create a `.env` file in the `server` directory:
 
 ```env
 PORT=5001
-GEMINI_API_KEY=AIzaSyBbJvsPJ5Dl6rt36f9_EC178EIKi8ljlbc
+GEMINI_API_KEY=
 
 DEEPGRAM_API_KEY=
 
