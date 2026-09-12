@@ -18,17 +18,17 @@ const server = http.createServer(app);
 // Middleware
 // ✅ FIX: Dynamic CORS. In dev, 'true' reflects the exact IP making the request, allowing anything!
 app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [
-            "http://localhost:3000",
-            "https://prep-master-ai-client.vercel.app", // Production Vercel Link
-          ]
-        : true, // <--- ALLOWS ALL IPs IN DEVELOPMENT
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  }),
+	cors({
+		origin:
+			process.env.NODE_ENV === "production"
+				? [
+						"http://localhost:3000",
+						"https://minor-project-gtbit.vercel.app/", // Production Vercel Link
+					]
+				: true, // <--- ALLOWS ALL IPs IN DEVELOPMENT
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		credentials: true,
+	}),
 );
 
 app.use(express.json({ limit: "50mb" }));
@@ -48,18 +48,19 @@ app.use("/api/assessment", assessmentRoutes);
 
 // SOCKET
 const io = new Server(server, {
-  cors: {
-    origin: process.env.NODE_ENV === "production" 
-      ? [
-          "http://localhost:3000",
-          "https://prep-master-ai-client.vercel.app",
-        ]
-      : true,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-  pingTimeout: 60000, // ✅ FIX: Increased to 60 seconds to survive mobile throttling
-  pingInterval: 25000, 
+	cors: {
+		origin:
+			process.env.NODE_ENV === "production"
+				? [
+						"http://localhost:3000",
+						"https://minor-project-gtbit.vercel.app/",
+					]
+				: true,
+		methods: ["GET", "POST"],
+		credentials: true,
+	},
+	pingTimeout: 60000, // ✅ FIX: Increased to 60 seconds to survive mobile throttling
+	pingInterval: 25000,
 });
 
 setupSocket(io);
