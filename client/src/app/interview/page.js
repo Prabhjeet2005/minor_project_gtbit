@@ -42,6 +42,8 @@ export default function InterviewPage() {
 	const mediaRecorderRef = useRef(null);
 	const messagesEndRef = useRef(null);
 
+	const USE_DEEPGRAM = true;
+
 	useEffect(() => {
 		const loadVoices = () => {
 			const availableVoices = window.speechSynthesis.getVoices();
