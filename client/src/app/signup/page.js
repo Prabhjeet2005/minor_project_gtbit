@@ -140,7 +140,7 @@ export default function SignupPage() {
 						onClick={handleGuestLogin}
 						disabled={loading}
 						className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2">
-						🚀 1-Click Recruiter Demo
+						🚀 1-Click Demo
 					</button>
 				</div>
 

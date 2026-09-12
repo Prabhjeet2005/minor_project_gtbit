@@ -1,15 +1,18 @@
 "use client"; // Required for React interactivity
 
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Upload, FileText, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useAuthContext } from "@/context/AuthContext";
 
 export default function Dashboard() {
 	const router = useRouter();
 	const [file, setFile] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
+
+	const { authUser } = useAuthContext();
 
 	const handleFileChange = (e) => {
 		if (e.target.files && e.target.files[0]) {
@@ -29,6 +32,7 @@ export default function Dashboard() {
 		// 1. Prepare Form Data (Backend expects 'file')
 		const formData = new FormData();
 		formData.append("resume", file);
+		
 
 		try {
 			// 2. Call the Backend
@@ -56,6 +60,16 @@ export default function Dashboard() {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (!authUser) {
+			router.push("/login");
+			return;
+		}
+		return () => {
+			
+		};
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6">

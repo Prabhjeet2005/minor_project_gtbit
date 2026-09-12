@@ -134,8 +134,7 @@ export default function Home() {
 								Experience the Platform
 							</h2>
 							<p className="text-slate-400 mb-8 max-w-md mx-auto">
-								Create an account to test the edge-AI proctoring, execute
-								live code, or chat with the AI interviewer.
+								Create an account and chat with the AI interviewer.
 							</p>
 							<div className="flex flex-col sm:flex-row gap-4 justify-center">
 								<Link href="/login" className="flex-1 max-w-[200px]">
