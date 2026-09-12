@@ -72,7 +72,7 @@ export default function SignupPage() {
 						Create an Account
 					</h1>
 					<p className="text-slate-400">
-						Start practicing with PrepMaster AI today.
+						Start practicing with AI Interviewer today.
 					</p>
 				</div>
 
