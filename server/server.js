@@ -23,7 +23,7 @@ app.use(
       process.env.NODE_ENV === "production"
         ? [
             "http://localhost:3000",
-            "https://prep-master-ai-client.vercel.app", // Production Vercel Link
+            "https://minor-project-gtbit.vercel.app", // Production Vercel Link
           ]
         : true, // <--- ALLOWS ALL IPs IN DEVELOPMENT
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -52,7 +52,7 @@ const io = new Server(server, {
     origin: process.env.NODE_ENV === "production" 
       ? [
           "http://localhost:3000",
-          "https://prep-master-ai-client.vercel.app",
+          "https://minor-project-gtbit.vercel.app",
         ]
       : true,
     methods: ["GET", "POST"],
