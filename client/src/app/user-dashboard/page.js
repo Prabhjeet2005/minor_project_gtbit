@@ -261,7 +261,7 @@ export default function UserDashboardPage() {
 							to start practicing.
 						</p>
 						<Link
-							href="/"
+							href="/new-interview"
 							className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">
 							Start First Interview
 						</Link>
