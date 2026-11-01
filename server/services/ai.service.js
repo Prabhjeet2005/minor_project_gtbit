@@ -202,7 +202,7 @@ class AIService {
 		const userMessages = interview.messages.filter(
 			(m) => m.role === "user",
 		);
-		if (userMessages.length < 3) {
+		if (userMessages.length < 1) {
 			const poorScore = {
 				overallScore: 1,
 				technicalAccuracy: 1,
@@ -230,7 +230,7 @@ class AIService {
         GRADING RULES:
         1. Ignore the Resume content for grading. Grade ONLY the User's answers in the transcript.
         2. If the user only said "Hello" or generic phrases, score 2/10.
-        3. Be harsh. 1-2 sentence answers = Max 5/10.
+        3. DEMO MODE: Do not penalize the user if the interview only contains 1 or 2 questions. Grade the technical accuracy and communication of the provided answers fairly. A single great answer should score 8-10/10.
         
         OUTPUT JSON:
         {
