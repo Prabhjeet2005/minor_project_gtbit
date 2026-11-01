@@ -6,8 +6,14 @@ import { CheckCircle, AlertTriangle, ArrowRight } from "lucide-react";
 export default function FeedbackPage() {
 	const router = useRouter();
 	const [report, setReport] = useState(null);
+	const [violation, setViolation] = useState(null);
 
 	useEffect(() => {
+		const v = localStorage.getItem("interviewViolation");
+		if (v) {
+			setViolation(v);
+			localStorage.removeItem("interviewViolation"); // Clear it so it doesn't show on future tests
+		}
 		// Retrieve data passed from Interview Page
 		const data = localStorage.getItem("latestFeedback");
 		if (data) {
@@ -24,6 +30,24 @@ export default function FeedbackPage() {
 
 	return (
 		<div className="min-h-screen bg-slate-950 text-white p-8">
+			{/* NEW: VIOLATION BADGE */}
+			{violation && (
+				<div className="bg-red-900/40 border border-red-500 text-red-200 px-6 py-4 rounded-2xl flex items-center gap-4 shadow-xl">
+					<div className="p-3 bg-red-950/50 rounded-full">
+						<AlertTriangle className="text-red-500 w-8 h-8" />
+					</div>
+					<div>
+						<h4 className="font-bold text-lg md:text-xl">
+							Interview Terminated (Multiple Violations)
+						</h4>
+						<p className="text-sm md:text-base opacity-90 mt-1">
+							This session was automatically ended by the AI Proctoring
+							Engine due to:{" "}
+							<strong className="text-white">{violation}</strong>
+						</p>
+					</div>
+				</div>
+			)}
 			<div className="max-w-3xl mx-auto space-y-8">
 				{/* Header */}
 				<div className="text-center space-y-2">

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
 	Mic,
 	Square,
@@ -16,6 +16,7 @@ import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthContext } from "@/context/AuthContext";
+import ProctoringCamera from "@/components/ProctoringCamera";
 
 export default function InterviewPage() {
 	const router = useRouter();
@@ -148,7 +149,6 @@ export default function InterviewPage() {
 					setStatus("Ready");
 				};
 
-
 				await audioPlayer.play();
 				return; // Exit function if Deepgram plays successfully
 			} catch (err) {
@@ -186,6 +186,34 @@ export default function InterviewPage() {
 
 		window.speechSynthesis.speak(utterance);
 	};
+
+const handleProctoringTermination = useCallback(
+	(reason) => {
+		console.log("Terminated due to:", reason);
+
+		// 1. Force stop the microphone if it is actively recording
+		if (
+			mediaRecorderRef.current &&
+			mediaRecorderRef.current.state === "recording"
+		) {
+			mediaRecorderRef.current.stop();
+			setIsRecording(false);
+		}
+
+		// 2. Silence the AI immediately
+		window.speechSynthesis.cancel();
+		setAiSpeaking(false);
+
+		localStorage.setItem("interviewViolation", reason);
+
+		// 3. Update UI and trigger backend feedback generation
+		setStatus("Terminated: Generating Report...");
+		if (socket && authUser) {
+			socket.emit("end-interview", authUser._id);
+		}
+	},
+	[socket, authUser],
+);
 
 	const startRecording = async () => {
 		try {
@@ -244,7 +272,6 @@ export default function InterviewPage() {
 	}, [transcript]);
 
 	return (
-		// h-[100dvh] fixes mobile browser URL bar overlapping issues
 		<div className="h-[100dvh] bg-slate-950 text-white flex flex-col overflow-hidden relative">
 			{/* STATUS BADGE */}
 			<div className="absolute top-4 left-0 right-0 flex justify-center z-20 pointer-events-none px-4">
@@ -280,7 +307,7 @@ export default function InterviewPage() {
 			</div>
 
 			{/* MAIN CONTENT AREA */}
-			<div className="flex-1 flex flex-col items-center justify-center relative p-4 gap-6 md:gap-8 mt-12 md:mt-0">
+			<div className="flex-1 flex flex-col items-center justify-center relative p-4 gap-6 md:gap-12 mt-12 md:mt-0">
 				{/* FIXED HEIGHT, SCROLLABLE AI QUESTION BUBBLE */}
 				<div className="w-full max-w-3xl flex items-center justify-center z-10">
 					<AnimatePresence mode="wait">
@@ -288,7 +315,6 @@ export default function InterviewPage() {
 							key={questionBubble}
 							initial={{ opacity: 0, y: 10 }}
 							animate={{ opacity: 1, y: 0 }}
-							// Added max-h-[150px]/[180px], overflow-y-auto, and custom scrollbar styles
 							className={`w-full max-h-[150px] md:max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full px-6 py-4 md:px-8 md:py-6 rounded-2xl md:rounded-3xl text-base sm:text-lg md:text-xl font-medium shadow-2xl backdrop-blur-md border ${
 								aiSpeaking
 									? "bg-blue-600/20 border-blue-500/30 text-white"
@@ -301,31 +327,48 @@ export default function InterviewPage() {
 					</AnimatePresence>
 				</div>
 
-				<div className="relative">
-					<div
-						className={`absolute inset-0 blur-3xl rounded-full opacity-40 transition-colors duration-500 ${
-							aiSpeaking
-								? "bg-blue-500"
-								: isRecording
-									? "bg-red-500"
-									: isThinking
-										? "bg-purple-500"
-										: "bg-slate-800"
-						}`}></div>
-					<motion.div
-						animate={{ scale: aiSpeaking ? [1, 1.05, 1] : 1 }}
-						transition={{ repeat: Infinity, duration: 0.5 }}
-						className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-slate-900 border-4 border-slate-700 shadow-2xl flex items-center justify-center relative z-0">
-						{aiSpeaking ? (
-							<Bot className="text-blue-400 w-16 h-16 md:w-20 md:h-20" />
-						) : isThinking ? (
-							<Loader2 className="text-purple-400 animate-spin w-16 h-16 md:w-20 md:h-20" />
-						) : (
-							<User
-								className={`w-16 h-16 md:w-20 md:h-20 ${isRecording ? "text-red-400" : "text-slate-500"}`}
-							/>
-						)}
-					</motion.div>
+				{/* --- NEW: SIDE-BY-SIDE VIDEO CALL LAYOUT --- */}
+				<div className="flex items-start justify-center gap-6 md:gap-16 w-full max-w-2xl relative z-0">
+					{/* LEFT: AI AVATAR */}
+					<div className="flex flex-col items-center gap-3">
+						<div className="relative">
+							<div
+								className={`absolute inset-0 blur-3xl rounded-full opacity-40 transition-colors duration-500 ${
+									aiSpeaking
+										? "bg-blue-500"
+										: isRecording
+											? "bg-red-500"
+											: isThinking
+												? "bg-purple-500"
+												: "bg-slate-800"
+								}`}></div>
+							<motion.div
+								animate={{ scale: aiSpeaking ? [1, 1.05, 1] : 1 }}
+								transition={{ repeat: Infinity, duration: 0.5 }}
+								className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-slate-900 border-4 border-slate-700 shadow-2xl flex items-center justify-center relative z-0">
+								{aiSpeaking ? (
+									<Bot className="text-blue-400 w-16 h-16 md:w-20 md:h-20" />
+								) : isThinking ? (
+									<Loader2 className="text-purple-400 animate-spin w-16 h-16 md:w-20 md:h-20" />
+								) : (
+									<User
+										className={`w-16 h-16 md:w-20 md:h-20 ${isRecording ? "text-red-400" : "text-slate-500"}`}
+									/>
+								)}
+							</motion.div>
+						</div>
+						<span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">
+							Interviewer
+						</span>
+					</div>
+
+					{/* RIGHT: USER PROCTORING CAMERA */}
+					<div className="flex flex-col items-center gap-3">
+						<ProctoringCamera onTerminate={handleProctoringTermination} />
+						<span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">
+							You
+						</span>
+					</div>
 				</div>
 
 				<div className="h-16 w-full max-w-2xl text-center px-4">
@@ -353,7 +396,7 @@ export default function InterviewPage() {
 				</button>
 			</div>
 
-			{/* FLOATING TRANSCRIPT PANEL (CHATBOT STYLE) */}
+			{/* FLOATING TRANSCRIPT PANEL */}
 			<div
 				className={`fixed bottom-44 md:bottom-52 right-4 left-4 sm:left-auto sm:right-8 sm:w-[400px] lg:w-[30vw] h-[60vh] max-h-[500px] bg-slate-900/95 backdrop-blur border border-slate-700 rounded-2xl flex flex-col shadow-2xl z-40 transition-all duration-300 origin-bottom-right ${
 					isChatOpen
@@ -473,4 +516,3 @@ export default function InterviewPage() {
 		</div>
 	);
 }
- 
