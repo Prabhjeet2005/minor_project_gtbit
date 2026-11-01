@@ -90,8 +90,8 @@ const ProctoringCamera = memo(function ProctoringCamera({ onTerminate }) {
 						analyzePredictions(predictions);
 					}
 
-					// FIX: Steady 2000ms (2s) interval for less CPU strain
-					detectionTimeout = setTimeout(runDetection, 2000);
+					// FIX: Steady 3000ms (3s) interval for less CPU strain
+					detectionTimeout = setTimeout(runDetection, 3000);
 				};
 
 				runDetection();
