@@ -187,33 +187,61 @@ export default function InterviewPage() {
 		window.speechSynthesis.speak(utterance);
 	};
 
-const handleProctoringTermination = useCallback(
-	(reason) => {
-		console.log("Terminated due to:", reason);
+	const handleProctoringTermination = useCallback(
+		(reason) => {
+			console.log("Terminated due to:", reason);
 
-		// 1. Force stop the microphone if it is actively recording
-		if (
-			mediaRecorderRef.current &&
-			mediaRecorderRef.current.state === "recording"
-		) {
-			mediaRecorderRef.current.stop();
-			setIsRecording(false);
-		}
+			// 1. Force stop the microphone
+			if (
+				mediaRecorderRef.current &&
+				mediaRecorderRef.current.state === "recording"
+			) {
+				mediaRecorderRef.current.stop();
+				setIsRecording(false);
+			}
 
-		// 2. Silence the AI immediately
-		window.speechSynthesis.cancel();
-		setAiSpeaking(false);
+			// 2. Silence the AI
+			window.speechSynthesis.cancel();
+			setAiSpeaking(false);
+			setStatus("Terminated: Kicking user...");
 
-		localStorage.setItem("interviewViolation", reason);
+			// 3. Save the violation flag for the Feedback page badge
+			localStorage.setItem("interviewViolation", reason);
 
-		// 3. Update UI and trigger backend feedback generation
-		setStatus("Terminated: Generating Report...");
-		if (socket && authUser) {
-			socket.emit("end-interview", authUser._id);
-		}
-	},
-	[socket, authUser],
-);
+			// 4. Create a hardcoded fallback 0/10 score just in case the backend fails to respond
+			const failedFeedback = {
+				overallScore: 0,
+				technicalAccuracy: 0,
+				communicationSkills: 0,
+				strengths: ["None"],
+				weaknesses: [
+					"Interview was terminated due to a proctoring violation.",
+				],
+				improvementTips: `Violation recorded: ${reason}. Please adhere to academic integrity guidelines.`,
+				generatedAt: new Date(),
+			};
+
+			localStorage.setItem(
+				"latestFeedback",
+				JSON.stringify({ ...failedFeedback, proctoringHistory: history }),
+			);
+
+			// 5. Tell the backend to log it in the database
+			if (socket && authUser) {
+				socket.emit("terminate-interview", {
+					userId: authUser._id,
+					reason: reason,
+					history: history,
+				});
+			}
+
+			// 6. FORCE REDIRECT: Do not wait for the backend. Kick the user after 1.5 seconds.
+			setTimeout(() => {
+				router.push("/feedback");
+			}, 1500);
+		},
+		[socket, authUser, router],
+	); // Ensure router is in the dependency array
 
 	const startRecording = async () => {
 		try {

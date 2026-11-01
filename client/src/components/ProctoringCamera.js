@@ -13,6 +13,53 @@ const ProctoringCamera = memo(function ProctoringCamera({ onTerminate }) {
 	const [statusColor, setStatusColor] = useState("border-slate-700");
 	const [isHidden, setIsHidden] = useState(false);
 
+  const captureEvidence = () => {
+		if (!videoRef.current) return null;
+		const canvas = document.createElement("canvas");
+		canvas.width = videoRef.current.videoWidth;
+		canvas.height = videoRef.current.videoHeight;
+		const ctx = canvas.getContext("2d");
+		// Flip back the mirrored video for the photo
+		ctx.translate(canvas.width, 0);
+		ctx.scale(-1, 1);
+		ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+		return canvas.toDataURL("image/jpeg", 0.5); // Compress to 50% JPEG to save socket bandwidth
+	};
+
+	const triggerViolation = (reason, isInstant) => {
+		// 1. Capture the visual evidence immediately
+		const imageBase64 = captureEvidence();
+
+		// 2. Log it to the timeline
+		evidenceHistory.current.push({
+			timestamp: new Date().toISOString(),
+			reason: reason,
+			image: imageBase64,
+		});
+
+		if (isInstant) {
+			toast.error(`Violation: ${reason} Interview Terminated.`);
+			setStatusColor("border-red-600");
+			isDetecting = false;
+			// Pass the entire history array back to the parent
+			onTerminate(reason, evidenceHistory.current);
+		} else {
+			warningsRef.current += 1;
+			setWarningUI(warningsRef.current);
+
+			if (warningsRef.current >= 3) {
+				toast.error(`Strike 3/3: ${reason} Interview Terminated.`);
+				setStatusColor("border-red-600");
+				isDetecting = false;
+				// Pass the entire history array back to the parent
+				onTerminate(reason, evidenceHistory.current);
+			} else {
+				toast.error(`Warning ${warningsRef.current}/3: ${reason}`);
+				setStatusColor("border-yellow-500");
+			}
+		}
+	};
+
 	useEffect(() => {
 		let stream = null;
 		let detectionTimeout = null;

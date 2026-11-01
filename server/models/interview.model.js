@@ -33,10 +33,16 @@ const interviewSchema = new mongoose.Schema(
 		},
 		status: {
 			type: String,
-			enum: ["active", "completed"],
+			enum: ["active", "completed", "terminated"],
 			default: "active",
 		},
-		createdAt: { type: Date, default: Date.now },
+		terminationReason: { type: String, default: null },
+		proctoringHistory: [{
+    timestamp: { type: Date },
+    reason: { type: String },
+    imageUrl: { type: String }
+  }],
+	createdAt: { type: Date, default: Date.now },
 	},
 	{ timestamps: true },
 );

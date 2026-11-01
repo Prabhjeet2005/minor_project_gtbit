@@ -10,7 +10,10 @@ import {
 	XCircle,
 	Lightbulb,
 	MessageSquare,
-  Printer
+  Printer,
+	AlertTriangle,
+	Eye,
+	X
 } from "lucide-react";
 
 export default function DetailedInterviewView() {
@@ -20,6 +23,8 @@ export default function DetailedInterviewView() {
 	const [interview, setInterview] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
+
+	const [showModal, setShowModal] = useState(false);
 
 	useEffect(() => {
 		const fetchInterviewDetails = async () => {
@@ -67,7 +72,7 @@ export default function DetailedInterviewView() {
 		);
 	}
 
-	const { feedback, messages } = interview;
+	const { feedback, messages, status, terminationReason, proctoringHistory } = interview;
 
 	// Filter out the system prompt so the user only sees the actual conversation
 	const transcript = messages?.filter((m) => m.role !== "system") || [];
@@ -81,6 +86,36 @@ export default function DetailedInterviewView() {
 						className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-medium">
 						<ArrowLeft size={16} /> Back to Dashboard
 					</Link>
+					{(status === "terminated" ||
+						(proctoringHistory && proctoringHistory.length > 0)) && (
+						<div className="bg-red-900/40 border border-red-500 text-red-200 px-6 py-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl mb-6">
+							<div className="flex items-center gap-4">
+								<div className="p-3 bg-red-950/50 rounded-full">
+									<AlertTriangle className="text-red-500 w-8 h-8" />
+								</div>
+								<div>
+									<h4 className="font-bold text-lg md:text-xl">
+										Interview Terminated
+									</h4>
+									<p className="text-sm md:text-base opacity-90 mt-1">
+										Automatically ended due to:{" "}
+										<strong className="text-white">
+											{terminationReason || "Proctoring Violations"}
+										</strong>
+									</p>
+								</div>
+							</div>
+
+							{/* EVIDENCE BUTTON */}
+							{proctoringHistory && proctoringHistory.length > 0 && (
+								<button
+									onClick={() => setShowModal(true)}
+									className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition-colors">
+									<Eye size={18} /> View Violations
+								</button>
+							)}
+						</div>
+					)}
 
 					<button
 						onClick={() => window.print()}
@@ -222,6 +257,56 @@ export default function DetailedInterviewView() {
 					)}
 				</div>
 			</div>
+			{showModal && proctoringHistory && (
+				<div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8">
+					<div className="bg-slate-900 border border-slate-700 w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+						<div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+							<h2 className="text-xl font-bold flex items-center gap-2 text-red-400">
+								<AlertTriangle /> Proctoring Timeline
+							</h2>
+							<button
+								onClick={() => setShowModal(false)}
+								className="text-slate-400 hover:text-white transition-colors">
+								<X size={24} />
+							</button>
+						</div>
+
+						<div className="p-6 overflow-y-auto space-y-8 flex-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-slate-700">
+							{proctoringHistory.map((item, index) => (
+								<div
+									key={index}
+									className="relative pl-6 border-l-2 border-slate-700">
+									<div
+										className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full ${index === proctoringHistory.length - 1 ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]" : "bg-yellow-500"}`}></div>
+
+									<div className="mb-1 text-xs font-bold text-slate-400">
+										{new Date(item.timestamp).toLocaleTimeString()}
+									</div>
+									<div
+										className={`text-lg font-bold mb-3 ${index === proctoringHistory.length - 1 ? "text-red-400" : "text-yellow-400"}`}>
+										{index === proctoringHistory.length - 1
+											? "Terminal Violation:"
+											: `Warning ${index + 1}:`}{" "}
+										{item.reason}
+									</div>
+
+									{item.imageUrl || item.image ? (
+										<img
+											src={item.imageUrl || item.image}
+											alt={`Evidence ${index + 1}`}
+											className="w-full max-w-sm rounded-lg border-2 border-slate-800 shadow-lg object-cover"
+										/>
+									) : (
+										<div className="p-4 bg-slate-800 rounded-lg text-sm text-slate-500 italic inline-block">
+											No image captured
+										</div>
+									)}
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

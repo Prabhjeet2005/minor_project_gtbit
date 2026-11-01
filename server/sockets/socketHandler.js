@@ -2,6 +2,7 @@
 const { createClient, LiveTranscriptionEvents } = require("@deepgram/sdk");
 const dotenv = require("dotenv");
 const aiService = require("../services/ai.service");
+const cloudinary = require("cloudinary").v2;
 
 dotenv.config();
 
@@ -209,6 +210,72 @@ const setupSocket = (io) => {
 		socket.on("end_proctoring_session", (roomId) => {
 			console.log(`[Proctor Socket] Session ended for room: ${roomId}`);
 			socket.to(roomId).emit("proctoring_ended");
+		});
+
+		// NEW: Handle Proctoring Terminations
+		socket.on("terminate-interview", async ({ userId, reason, history }) => {
+			try {
+				const interview = await Interview.findOne({
+					userId,
+					status: "ongoing",
+				});
+				if (!interview) return;
+
+				// 1. Mark as terminated and save the reason
+				interview.status = "terminated";
+				interview.terminationReason = reason;
+
+				if (history && history.length > 0) {
+					const uploadedHistory = await Promise.all(
+						history.map(async (event) => {
+							try {
+								if (event.image) {
+									const uploadRes = await cloudinary.uploader.upload(
+										event.image,
+										{
+											folder: "proctoring_evidence",
+										},
+									);
+									return {
+										timestamp: event.timestamp,
+										reason: event.reason,
+										imageUrl: uploadRes.secure_url,
+									};
+								}
+							} catch (err) {
+								console.error("Cloudinary Upload Error:", err);
+							}
+							// Fallback if image fails or is missing
+							return { timestamp: event.timestamp, reason: event.reason };
+						}),
+					);
+					interview.proctoringHistory = uploadedHistory;
+				}
+
+				// 2. Generate an automatic failing grade
+				const failedFeedback = {
+					overallScore: 0,
+					technicalAccuracy: 0,
+					communicationSkills: 0,
+					strengths: ["None"],
+					weaknesses: [
+						"Interview was terminated due to a proctoring violation.",
+					],
+					improvementTips: `Violation recorded: ${reason}. Please adhere to academic integrity guidelines.`,
+					generatedAt: new Date(),
+				};
+
+				interview.feedback = failedFeedback;
+				await interview.save();
+
+				// 3. Send the result back to the frontend
+				socket.emit("feedback-result", {
+					...failedFeedback,
+					proctoringHistory: interview.proctoringHistory,
+				});
+			} catch (error) {
+				console.error("Error terminating interview:", error);
+			}
 		});
 
 		socket.on("disconnect", () => {
