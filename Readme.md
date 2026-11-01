@@ -1,7 +1,9 @@
 # AI Interviewer & Dashboard
 
 This isolated minor project features a real-time conversational AI interviewer that conducts mock technical interviews and a dashboard to track past performance.
-
+---
+**Website URL :**``` https://minor-project-gtbit.vercel.app/```
+---
 ## Core Features
 *   **AI Interviewer:** Dynamic, real-time technical interviews via WebSockets.
 *   **Natural Voice Generation:** Deepgram Aura integration for human-like TTS.

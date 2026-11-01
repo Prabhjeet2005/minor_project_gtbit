@@ -145,11 +145,12 @@ export default function UserDashboardPage() {
 	// --- CHART DATA PREPARATION ---
 	const interviewChartData = [...interviews]
 		.reverse()
+		.slice(-10) // <-- ADD THIS LINE to limit to last 10 interviews
 		.map((inv, index) => ({
 			name: `Int ${index + 1}`,
 			date: formatDate(inv.createdAt),
 			score: inv.feedback?.overallScore
-				? (inv.feedback.overallScore).toFixed(1)
+				? inv.feedback.overallScore.toFixed(1)
 				: 0,
 		}));
 
@@ -231,14 +232,12 @@ export default function UserDashboardPage() {
 					</div>
 
 					<div className="flex flex-col xl:flex-row items-center gap-4 w-full lg:w-auto">
-
 						{/* RESTORED: DYNAMIC NEW ACTION BUTTON */}
-							<Link
-								href="/new-interview"
-								className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors text-center shadow-lg shadow-blue-900/20 whitespace-nowrap">
-								+ New Interview
-							</Link>
-						
+						<Link
+							href="/new-interview"
+							className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition-colors text-center shadow-lg shadow-blue-900/20 whitespace-nowrap">
+							+ New Interview
+						</Link>
 					</div>
 				</div>
 
@@ -251,194 +250,207 @@ export default function UserDashboardPage() {
 				{/* ===================================================================== */}
 				{/* TAB 1: MOCK INTERVIEWS */}
 				{/* ===================================================================== */}
-				{
-					interviews.length === 0 ? (
-							<div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center">
-								<div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
-									<TrendingUp size={32} className="text-slate-500" />
-								</div>
-								<h3 className="text-xl font-bold mb-2">
-									No interviews yet!
-								</h3>
-								<p className="text-slate-400 mb-6 max-w-sm">
-									You haven't completed any mock interviews. Upload your
-									resume to start practicing.
-								</p>
-								<Link
-									href="/"
-									className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">
-									Start First Interview
-								</Link>
+				{interviews.length === 0 ? (
+					<div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center flex flex-col items-center">
+						<div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+							<TrendingUp size={32} className="text-slate-500" />
+						</div>
+						<h3 className="text-xl font-bold mb-2">No interviews yet!</h3>
+						<p className="text-slate-400 mb-6 max-w-sm">
+							You haven't completed any mock interviews. Upload your resume
+							to start practicing.
+						</p>
+						<Link
+							href="/"
+							className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">
+							Start First Interview
+						</Link>
+					</div>
+				) : (
+					<>
+						<div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 shadow-lg">
+							<h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+								<TrendingUp className="text-blue-400" size={20} />{" "}
+								Performance History
+							</h3>
+							<div className="h-[300px] w-full">
+								<ResponsiveContainer width="100%" height="100%">
+									<LineChart
+										data={interviewChartData}
+										margin={{
+											top: 5,
+											right: 20,
+											bottom: 5,
+											left: 0,
+										}}>
+										<CartesianGrid
+											strokeDasharray="3 3"
+											stroke="#1e293b"
+											vertical={false}
+										/>
+										<XAxis
+											dataKey="name"
+											stroke="#64748b"
+											fontSize={12}
+											tickLine={false}
+											axisLine={false}
+										/>
+										<YAxis
+											domain={[0, 10]}
+											stroke="#64748b"
+											fontSize={12}
+											tickLine={false}
+											axisLine={false}
+										/>
+										<Tooltip
+											content={<InterviewTooltip />}
+											cursor={{ stroke: "#334155", strokeWidth: 2 }}
+										/>
+										<Line
+											type="monotone"
+											dataKey="score"
+											stroke="#3b82f6"
+											strokeWidth={4}
+											dot={{
+												r: 6,
+												fill: "#1e3a8a",
+												stroke: "#3b82f6",
+												strokeWidth: 2,
+											}}
+											activeDot={{
+												r: 8,
+												fill: "#60a5fa",
+												stroke: "#fff",
+												strokeWidth: 2,
+											}}
+										/>
+									</LineChart>
+								</ResponsiveContainer>
 							</div>
-						) : (
-						<>
-									<div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 shadow-lg">
-										<h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-											<TrendingUp className="text-blue-400" size={20} />{" "}
-											Performance History
-										</h3>
-										<div className="h-[300px] w-full">
-											<ResponsiveContainer width="100%" height="100%">
-												<LineChart
-													data={interviewChartData}
-													margin={{
-														top: 5,
-														right: 20,
-														bottom: 5,
-														left: 0,
-													}}>
-													<CartesianGrid
-														strokeDasharray="3 3"
-														stroke="#1e293b"
-														vertical={false}
-													/>
-													<XAxis
-														dataKey="name"
-														stroke="#64748b"
-														fontSize={12}
-														tickLine={false}
-														axisLine={false}
-													/>
-													<YAxis
-														domain={[0, 10]}
-														stroke="#64748b"
-														fontSize={12}
-														tickLine={false}
-														axisLine={false}
-													/>
-													<Tooltip
-														content={<InterviewTooltip />}
-														cursor={{ stroke: "#334155", strokeWidth: 2 }}
-													/>
-													<Line
-														type="monotone"
-														dataKey="score"
-														stroke="#3b82f6"
-														strokeWidth={4}
-														dot={{
-															r: 6,
-															fill: "#1e3a8a",
-															stroke: "#3b82f6",
-															strokeWidth: 2,
-														}}
-														activeDot={{
-															r: 8,
-															fill: "#60a5fa",
-															stroke: "#fff",
-															strokeWidth: 2,
-														}}
-													/>
-												</LineChart>
-											</ResponsiveContainer>
-										</div>
-									</div>
+						</div>
 
-
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-									{paginatedInterviews.map((interview) => (
-										<div
-											key={interview._id}
-											className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 hover:border-slate-700 transition-all group flex flex-col h-full shadow-lg">
-											{/* ✅ RESPONSIVE FIX: Flex header instead of absolute positioning */}
-											<div className="flex flex-wrap-reverse justify-between items-start gap-3 mb-6">
-												<div className="flex items-center gap-2 text-slate-400 text-sm font-medium mt-1">
-													<Calendar size={16} className="shrink-0" />
-													<span className="whitespace-nowrap">
-														{formatDate(interview.createdAt)}
-													</span>
-												</div>
-
-												<div className="flex items-center gap-2 self-end sm:self-auto ml-auto">
-													{interview.resumeUrl && (
-														<button
-															onClick={() =>
-																setSelectedResumeUrl(interview.resumeUrl)
-															}
-															className="flex items-center gap-1.5 text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-all shadow-md whitespace-nowrap"
-															title="View Original Resume PDF">
-															<Eye size={14} />
-															<span className="hidden sm:inline">
-																View Resume
-															</span>
-															<span className="sm:hidden">Resume</span>
-														</button>
-													)}
-
-													<button
-														onClick={() => confirmDelete(interview._id)}
-														className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 p-1.5 sm:p-2 rounded-lg transition-colors bg-slate-950 border border-slate-800 shrink-0"
-														title="Delete Interview">
-														<Trash2 size={16} />
-													</button>
-												</div>
-											</div>
-
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+							{paginatedInterviews.map((interview) => (
+								<div
+									key={interview._id}
+									className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 hover:border-slate-700 transition-all group flex flex-col h-full shadow-lg">
+									{/* ✅ RESPONSIVE FIX: Flex header instead of absolute positioning */}
+									<div className="flex flex-wrap-reverse justify-between items-start gap-3 mb-6">
+										{/* --- ADD NEW: Red Warning Icon if Terminated --- */}
+										{interview.status === "terminated" && (
 											<div
-												className={`px-4 py-3 rounded-xl text-center font-black text-2xl border mb-6 shadow-inner ${interview.feedback?.overallScore >= 80 ? "bg-green-900/20 text-green-400 border-green-500/20" : interview.feedback?.overallScore >= 60 ? "bg-yellow-900/20 text-yellow-400 border-yellow-500/20" : "bg-red-900/20 text-red-400 border-red-500/20"}`}>
-												{interview.feedback?.overallScore || 0}{" "}
-												<span className="text-sm opacity-50 font-bold">
-													/ 10
+												className="absolute top-4 right-4 bg-red-950/50 p-2 rounded-full border border-red-500/30"
+												title={`Terminated: ${interview.terminationReason}`}>
+												<AlertCircle className="text-red-500 w-5 h-5" />
+											</div>
+										)}
+
+										{/* --- UPDATE: Date and Time Container --- */}
+										<div className="flex items-center gap-2 text-slate-400 text-sm font-medium mt-1">
+											<Calendar size={16} className="shrink-0" />
+											<div className="flex flex-col">
+												<span className="whitespace-nowrap font-bold text-white">
+													{formatDate(interview.createdAt)}
+												</span>
+												<span className="whitespace-nowrap text-xs mt-0.5">
+													{new Date(
+														interview.createdAt,
+													).toLocaleTimeString(undefined, {
+														hour: "2-digit",
+														minute: "2-digit",
+													})}
 												</span>
 											</div>
-
-											<div className="space-y-3 mb-8 flex-1">
-												<div className="flex justify-between items-center text-sm border-b border-slate-800/50 pb-2">
-													<span className="text-slate-400">
-														Technical Accuracy
-													</span>
-													<span className="font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded-md">
-														{interview.feedback?.technicalAccuracy || 0}/10
-													</span>
-												</div>
-												<div className="flex justify-between items-center text-sm">
-													<span className="text-slate-400">
-														Communication
-													</span>
-													<span className="font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded-md">
-														{interview.feedback?.communicationSkills || 0}
-														/10
-													</span>
-												</div>
-											</div>
-
-											<Link
-												href={`/user-dashboard/${interview._id}`}
-												className="w-full p-4 bg-slate-800 group-hover:bg-blue-600 rounded-xl text-sm font-bold text-slate-300 group-hover:text-white transition-all flex justify-center items-center gap-2 shadow-md mt-auto">
-												View Detailed Feedback <ArrowRight size={16} />
-											</Link>
 										</div>
-									))}
-								</div>
 
-								{/* PAGINATION CONTROLS */}
-								{totalInterviewPages > 1 && (
-									<div className="flex justify-center items-center gap-4 mt-10">
-										<button
-											onClick={() =>
-												setInterviewPage((p) => Math.max(1, p - 1))
-											}
-											disabled={interviewPage === 1}
-											className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white transition-colors">
-											<ChevronLeft size={20} />
-										</button>
-										<span className="text-slate-400 text-sm font-bold tracking-widest uppercase">
-											Page {interviewPage} of {totalInterviewPages}
-										</span>
-										<button
-											onClick={() =>
-												setInterviewPage((p) =>
-													Math.min(totalInterviewPages, p + 1),
-												)
-											}
-											disabled={interviewPage === totalInterviewPages}
-											className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white transition-colors">
-											<ChevronRight size={20} />
-										</button>
+										<div className="flex items-center gap-2 self-end sm:self-auto ml-auto">
+											{interview.resumeUrl && (
+												<button
+													onClick={() =>
+														setSelectedResumeUrl(interview.resumeUrl)
+													}
+													className="flex items-center gap-1.5 text-xs font-bold bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-all shadow-md whitespace-nowrap"
+													title="View Original Resume PDF">
+													<Eye size={14} />
+													<span className="hidden sm:inline">
+														View Resume
+													</span>
+													<span className="sm:hidden">Resume</span>
+												</button>
+											)}
+
+											<button
+												onClick={() => confirmDelete(interview._id)}
+												className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 p-1.5 sm:p-2 rounded-lg transition-colors bg-slate-950 border border-slate-800 shrink-0"
+												title="Delete Interview">
+												<Trash2 size={16} />
+											</button>
+										</div>
 									</div>
-								)}
-						</>
-						)}
 
+									<div
+										className={`px-4 py-3 rounded-xl text-center font-black text-2xl border mb-6 shadow-inner ${interview.feedback?.overallScore >= 80 ? "bg-green-900/20 text-green-400 border-green-500/20" : interview.feedback?.overallScore >= 60 ? "bg-yellow-900/20 text-yellow-400 border-yellow-500/20" : "bg-red-900/20 text-red-400 border-red-500/20"}`}>
+										{interview.feedback?.overallScore || 0}{" "}
+										<span className="text-sm opacity-50 font-bold">
+											/ 10
+										</span>
+									</div>
+
+									<div className="space-y-3 mb-8 flex-1">
+										<div className="flex justify-between items-center text-sm border-b border-slate-800/50 pb-2">
+											<span className="text-slate-400">
+												Technical Accuracy
+											</span>
+											<span className="font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded-md">
+												{interview.feedback?.technicalAccuracy || 0}/10
+											</span>
+										</div>
+										<div className="flex justify-between items-center text-sm">
+											<span className="text-slate-400">Communication</span>
+											<span className="font-bold text-slate-200 bg-slate-800 px-2 py-0.5 rounded-md">
+												{interview.feedback?.communicationSkills || 0}
+												/10
+											</span>
+										</div>
+									</div>
+
+									<Link
+										href={`/user-dashboard/${interview._id}`}
+										className="w-full p-4 bg-slate-800 group-hover:bg-blue-600 rounded-xl text-sm font-bold text-slate-300 group-hover:text-white transition-all flex justify-center items-center gap-2 shadow-md mt-auto">
+										View Detailed Feedback <ArrowRight size={16} />
+									</Link>
+								</div>
+							))}
+						</div>
+
+						{/* PAGINATION CONTROLS */}
+						{totalInterviewPages > 1 && (
+							<div className="flex justify-center items-center gap-4 mt-10">
+								<button
+									onClick={() =>
+										setInterviewPage((p) => Math.max(1, p - 1))
+									}
+									disabled={interviewPage === 1}
+									className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white transition-colors">
+									<ChevronLeft size={20} />
+								</button>
+								<span className="text-slate-400 text-sm font-bold tracking-widest uppercase">
+									Page {interviewPage} of {totalInterviewPages}
+								</span>
+								<button
+									onClick={() =>
+										setInterviewPage((p) =>
+											Math.min(totalInterviewPages, p + 1),
+										)
+									}
+									disabled={interviewPage === totalInterviewPages}
+									className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white transition-colors">
+									<ChevronRight size={20} />
+								</button>
+							</div>
+						)}
+					</>
+				)}
 			</div>
 
 			{/* ✅ NEW: RESUME PDF VIEWER MODAL */}
