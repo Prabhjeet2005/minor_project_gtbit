@@ -204,9 +204,9 @@ class AIService {
 		);
 		if (userMessages.length < 1) {
 			const poorScore = {
-				overallScore: 1,
-				technicalAccuracy: 1,
-				communicationSkills: 1,
+				overallScore: 0,
+				technicalAccuracy: 0,
+				communicationSkills: 0,
 				strengths: ["None"],
 				weaknesses: ["Interview was too short to evaluate."],
 				improvementTips: "Please complete a full interview session.",
