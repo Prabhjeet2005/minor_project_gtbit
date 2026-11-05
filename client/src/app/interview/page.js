@@ -45,6 +45,14 @@ export default function InterviewPage() {
 
 	const USE_DEEPGRAM = process.env.NEXT_PUBLIC_USE_DEEPGRAM !== "false";
 
+	// UNIVERSAL AUDIO KILL SWITCH
+	useEffect(() => {
+		return () => {
+			// This instantly stops the AI from speaking the moment the component unmounts (page changes)
+			window.speechSynthesis.cancel();
+		};
+	}, []);
+	
 	useEffect(() => {
 		const loadVoices = () => {
 			const availableVoices = window.speechSynthesis.getVoices();
